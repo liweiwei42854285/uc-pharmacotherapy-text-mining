@@ -1,0 +1,7 @@
+generation_map <- c(
+"G1_conventional: azathioprine; 6-mercaptopurine; methotrexate; cyclosporine; tacrolimus; 6-thioguanine",
+"G2_antiTNF: infliximab; adalimumab; golimumab; certolizumab",
+"G3_nonTNF: vedolizumab; ustekinumab; mirikizumab; risankizumab; guselkumab",
+"G4a_panJAK: tofacitinib",
+"G4b_selectiveJAK1: upadacitinib; filgotinib"
+)
