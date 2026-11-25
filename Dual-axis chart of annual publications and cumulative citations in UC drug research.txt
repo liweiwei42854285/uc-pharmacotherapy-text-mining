@@ -1,0 +1,67 @@
+# ==========================================
+# 1. 准备数据并计算“累计总被引”
+# ==========================================
+df_trend_cum <- M %>%
+  select(PY, TC) %>%
+  mutate(PY = as.numeric(PY), 
+         TC = as.numeric(TC)) %>%
+  filter(!is.na(PY)) %>%
+  group_by(PY) %>%
+  summarise(
+    Articles = n(),                          # 每年发文量
+    Yearly_Citations = sum(TC, na.rm = TRUE) # 当年总被引
+  ) %>%
+  filter(PY >= 2000) %>%
+  # 【核心操作】：用 cumsum 计算累计总和
+  mutate(Cumulative_Citations = cumsum(Yearly_Citations))
+
+# ==========================================
+# 2. 计算双 Y 轴比例
+# ==========================================
+coeff_cum <- max(df_trend_cum$Articles) / max(df_trend_cum$Cumulative_Citations)
+
+# ==========================================
+# 3. 画图
+# ==========================================
+p_dual_cum <- ggplot(df_trend_cum, aes(x = PY)) +
+  # 左轴：发文量柱状图（浅蓝色）
+  geom_col(aes(y = Articles), fill = "#9EB4C9", width = 0.7) +
+  
+  # 右轴：累计总被引折线图（深红色）
+  geom_line(aes(y = Cumulative_Citations * coeff_cum), color = "#9E2A2B", linewidth = 1.2) +
+  geom_point(aes(y = Cumulative_Citations * coeff_cum), color = "#9E2A2B", size = 1.5) +
+  
+  # 设置双 Y 轴
+  scale_y_continuous(
+    name = "Articles", 
+    sec.axis = sec_axis(~ . / coeff_cum, name = "Cumulative citations")
+  ) +
+  
+  # X 轴刻度
+  scale_x_continuous(breaks = seq(2000, max(df_trend_cum$PY), by = 3)) +
+  
+  # 细节美化（保留你喜欢的配色和风格）
+  labs(x = "Year") +
+  theme_classic() +
+  theme(
+    axis.title.y.left = element_text(color = "#9EB4C9", face = "bold", size = 12),
+    axis.text.y.left = element_text(color = "#9EB4C9", face = "bold"),
+    axis.line.y.left = element_line(color = "#9EB4C9", linewidth = 1),
+    axis.ticks.y.left = element_line(color = "#9EB4C9"),
+    
+    axis.title.y.right = element_text(color = "#9E2A2B", face = "bold", size = 12, margin = margin(l = 10)),
+    axis.text.y.right = element_text(color = "#9E2A2B", face = "bold"),
+    axis.line.y.right = element_line(color = "#9E2A2B", linewidth = 1),
+    axis.ticks.y.right = element_line(color = "#9E2A2B"),
+    
+    axis.text.x = element_text(size = 10),
+    axis.title.x = element_text(size = 12, face = "bold"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# ==========================================
+# 4. 查看并保存
+# ==========================================
+print(p_dual_cum)
+ggsave("Fig1B_DualAxis_Cumulative.pdf", plot = p_dual_cum, width = 8, height = 6, dpi = 300)
